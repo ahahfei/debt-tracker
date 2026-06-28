@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>債務管理</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/tabler-icons.min.css" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --s0: #eeecea; --s1: #f5f4f0; --s2: #ffffff;
+  --tp: #0b0b0b; --ts: #52514e; --tm: #898781;
+  --bd: rgba(11,11,11,0.10); --bds: rgba(11,11,11,0.20);
+  --r: 8px;
+  --red: #d03b3b; --red-bg: #fcebeb; --red-bd: #f09595;
+  --grn: #3b6d11; --grn-bg: #eaf3de; --grn-bd: #97c459;
+  --blu: #185fa5; --blu-bg: #e6f1fb; --blu-bd: #85b7eb;
+  --amb: #854f0b; --amb-bg: #faeeda; --amb-bd: #ef9f27;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --s0: #111110; --s1: #1a1a19; --s2: #242422;
+    --tp: #f0efe8; --ts: #c3c2b7; --tm: #898781;
+    --bd: rgba(255,255,255,0.10); --bds: rgba(255,255,255,0.22);
+    --red: #e66767; --red-bg: #2a1010; --red-bd: #a32d2d;
+    --grn: #97c459; --grn-bg: #141f09; --grn-bd: #3b6d11;
+    --blu: #5ba0e8; --blu-bg: #0c1e33; --blu-bd: #185fa5;
+    --amb: #ef9f27; --amb-bg: #1e1100; --amb-bd: #854f0b;
+  }
+}
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--s0); color: var(--tp); min-height: 100vh; }
+
+/* NAV TABS */
+.nav { display: flex; border-bottom: 0.5px solid var(--bd); background: var(--s1); position: sticky; top: 0; z-index: 10; }
+.nav button { flex: 1; padding: 14px 0; font-size: 13px; font-weight: 500; color: var(--tm); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; }
+.nav button.active { color: var(--blu); border-bottom-color: var(--blu); }
+
+.page { display: none; padding: 1.25rem 1rem 4rem; max-width: 640px; margin: 0 auto; }
+.page.active { display: block; }
+
+/* SECTION TITLES */
+.stitle { font-size: 11px; font-weight: 600; color: var(--tm); text-transform: uppercase; letter-spacing: 0.06em; margin: 1.25rem 0 8px; }
+.stitle:first-child { margin-top: 0; }
+
+/* METRIC CARDS */
+.mgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 4px; }
+.metric { background: var(--s1); border: 0.5px solid var(--bd); border-radius: var(--r); padding: 12px 14px; }
+.metric .lb { font-size: 11px; color: var(--tm); margin-bottom: 3px; }
+.metric .vl { font-size: 18px; font-weight: 600; }
+.vl.red { color: var(--red); } .vl.grn { color: var(--grn); } .vl.blu { color: var(--blu); }
+
+/* DEBT CARDS */
+.dlist { display: flex; flex-direction: column; gap: 8px; }
+.dcard { background: var(--s2); border: 0.5px solid var(--bd); border-radius: 12px; padding: 1rem 1.25rem; }
+.dtop { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+.dname { font-size: 15px; font-weight: 600; }
+.dnote { font-size: 11px; color: var(--tm); margin-left: 6px; }
+.dmeta { font-size: 12px; color: var(--tm); margin-top: 2px; }
+.tag { font-size: 11px; padding: 2px 9px; border-radius: 99px; white-space: nowrap; }
+.tag.red { background: var(--red-bg); color: var(--red); }
+.tag.grn { background: var(--grn-bg); color: var(--grn); }
+.tag.amb { background: var(--amb-bg); color: var(--amb); }
+.damount { font-size: 22px; font-weight: 600; margin: 2px 0; }
+.drate { font-size: 12px; color: var(--tm); margin-bottom: 6px; }
+.pbar { height: 4px; background: var(--s0); border-radius: 99px; overflow: hidden; margin: 8px 0 4px; }
+.pfill { height: 100%; border-radius: 99px; }
+.pfill.red { background: var(--red); } .pfill.grn { background: var(--grn); } .pfill.blu { background: var(--blu); }
+.pinfo { display: flex; justify-content: space-between; font-size: 11px; color: var(--tm); margin-bottom: 10px; }
+
+/* ACTIONS */
+.arow { display: flex; gap: 6px; }
+.arow input { flex: 1; height: 34px; padding: 0 10px; border: 0.5px solid var(--bds); border-radius: var(--r); background: var(--s1); color: var(--tp); font-size: 13px; outline: none; min-width: 0; }
+.arow input:focus { border-color: var(--blu); }
+.arow input.edit-bal { border-color: var(--amb-bd); }
+.btn { height: 34px; padding: 0 14px; border: none; border-radius: var(--r); font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; }
+.btn.pri { background: var(--blu); color: #fff; }
+.btn.pri:hover { opacity: 0.88; }
+.btn.sec { background: var(--s1); color: var(--tp); border: 0.5px solid var(--bds); }
+.btn.sec:hover { background: var(--s0); }
+.btn.warn { background: var(--amb-bg); color: var(--amb); border: 0.5px solid var(--amb-bd); }
+.edit-section { margin-top: 10px; border-top: 0.5px solid var(--bd); padding-top: 10px; display: none; }
+.edit-section.open { display: block; }
+.edit-row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+.edit-row label { font-size: 12px; color: var(--ts); min-width: 70px; }
+.edit-row input { flex: 1; height: 32px; padding: 0 8px; border: 0.5px solid var(--bds); border-radius: var(--r); background: var(--s1); color: var(--tp); font-size: 13px; outline: none; }
+.edit-row input:focus { border-color: var(--amb-bd); }
+.edit-hint { font-size: 11px; color: var(--tm); margin-bottom: 8px; }
+
+/* INCOME PLANNER */
+.income-card { background: var(--s2); border: 0.5px solid var(--bd); border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1rem; }
+.income-title { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
+.irow { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.irow label { font-size: 13px; color: var(--ts); min-width: 80px; }
+.irow input { flex: 1; height: 36px; padding: 0 10px; border: 0.5px solid var(--bds); border-radius: var(--r); background: var(--s1); color: var(--tp); font-size: 15px; font-weight: 500; outline: none; }
+.irow input:focus { border-color: var(--blu); }
+.plan-result { background: var(--s1); border-radius: var(--r); padding: 12px 14px; margin-top: 10px; }
+.plan-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 8px 0; border-bottom: 0.5px solid var(--bd); gap: 8px; }
+.plan-item:last-child { border-bottom: none; }
+.pi-left .pi-name { font-size: 14px; font-weight: 500; }
+.pi-left .pi-why { font-size: 11px; color: var(--tm); margin-top: 2px; }
+.pi-right { text-align: right; white-space: nowrap; }
+.pi-right .pi-amt { font-size: 15px; font-weight: 600; color: var(--red); }
+.pi-right .pi-tag { font-size: 11px; color: var(--tm); }
+.plan-summary { margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ps-item { background: var(--s2); border: 0.5px solid var(--bd); border-radius: var(--r); padding: 10px 12px; }
+.ps-lb { font-size: 11px; color: var(--tm); margin-bottom: 2px; }
+.ps-vl { font-size: 16px; font-weight: 600; }
+.ps-vl.grn { color: var(--grn); } .ps-vl.red { color: var(--red); }
+.alert-box { border-radius: var(--r); padding: 10px 14px; font-size: 13px; margin-top: 10px; }
+.alert-box.warn { background: var(--amb-bg); color: var(--amb); border: 0.5px solid var(--amb-bd); }
+.alert-box.ok { background: var(--grn-bg); color: var(--grn); border: 0.5px solid var(--grn-bd); }
+
+/* HISTORY */
+.hlist { display: flex; flex-direction: column; max-height: 400px; overflow-y: auto; }
+.hitem { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 0.5px solid var(--bd); font-size: 13px; }
+.hitem:last-child { border-bottom: none; }
+.hi-name { font-weight: 500; }
+.hi-date { font-size: 11px; color: var(--tm); }
+.hi-amt { font-weight: 600; }
+.hi-amt.pay { color: var(--grn); }
+.hi-amt.edit { color: var(--amb); }
+.empty { text-align: center; padding: 2rem 0; font-size: 13px; color: var(--tm); }
+
+/* TOAST */
+.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--s2); border: 0.5px solid var(--bds); border-radius: var(--r); padding: 9px 20px; font-size: 13px; opacity: 0; transition: opacity 0.25s; pointer-events: none; white-space: nowrap; z-index: 999; }
+.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <button class="active" onclick="switchTab('overview')"><i class="ti ti-layout-dashboard"></i> 總覽</button>
+  <button onclick="switchTab('planner')"><i class="ti ti-calculator"></i> 還款規劃</button>
+  <button onclick="switchTab('history')"><i class="ti ti-history"></i> 紀錄</button>
+</nav>
+
+<!-- 總覽 -->
+<div id="tab-overview" class="page active">
+  <div class="mgrid">
+    <div class="metric"><div class="lb">總欠款</div><div class="vl red" id="s-total">—</div></div>
+    <div class="metric"><div class="lb">累計已還</div><div class="vl grn" id="s-paid">—</div></div>
+    <div class="metric"><div class="lb">欠款筆數</div><div class="vl" id="s-count">—</div></div>
+  </div>
+  <div class="stitle">各銀行欠款</div>
+  <div class="dlist" id="debtList"></div>
+</div>
+
+<!-- 還款規劃 -->
+<div id="tab-planner" class="page">
+  <div class="income-card">
+    <div class="income-title"><i class="ti ti-wallet" style="margin-right:6px"></i>本月收入與預算</div>
+    <div class="irow">
+      <label>本月收入</label>
+      <input type="number" id="income" placeholder="例：45000" oninput="calcPlan()" />
+    </div>
+    <div class="irow">
+      <label>生活費預留</label>
+      <input type="number" id="living" placeholder="例：25000" oninput="calcPlan()" />
+    </div>
+    <div id="plan-output"></div>
+  </div>
+</div>
+
+<!-- 紀錄 -->
+<div id="tab-history" class="page">
+  <div class="stitle">所有紀錄</div>
+  <div class="hlist" id="historyList"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const DEFAULTS = [
+  { id:'credit_loan',  name:'信貸',            type:'信貸',     original:796166, balance:796166, rate:0.07,   monthly:17000, interestFree:false },
+  { id:'labor_mom',    name:'勞貸（媽）',       type:'勞工貸款', original:85847,  balance:85847,  rate:0,      monthly:3500,  interestFree:true,  note:'114/6–117/6' },
+  { id:'labor_dad',    name:'勞貸（爸）',       type:'勞工貸款', original:83694,  balance:83694,  rate:0,      monthly:3500,  interestFree:true,  note:'113/8–116/8' },
+  { id:'cc_dad_esun',  name:'信用卡（爸玉山）', type:'信用卡',   original:207768, balance:207768, rate:0.1985, monthly:0,     interestFree:false },
+  { id:'cc_dbs',       name:'信用卡（星展）',   type:'信用卡',   original:133332, balance:133332, rate:0.1985, monthly:0,     interestFree:false },
+  { id:'cc_mom_esun',  name:'信用卡（媽玉山）', type:'信用卡',   original:72180,  balance:72180,  rate:0.1985, monthly:13655, interestFree:false },
+  { id:'cc_cathay',    name:'信用卡（國泰）',   type:'信用卡',   original:77983,  balance:77983,  rate:0.1985, monthly:0,     interestFree:false },
+  { id:'cc_union',     name:'信用卡（聯邦）',   type:'信用卡',   original:28972,  balance:28972,  rate:0.1985, monthly:13693, interestFree:false },
+];
+
+let debts   = JSON.parse(localStorage.getItem('debts_v5') || 'null') || DEFAULTS.map(d=>({...d}));
+let history = JSON.parse(localStorage.getItem('debt_hist_v2') || '[]');
+
+function save() {
+  localStorage.setItem('debts_v5', JSON.stringify(debts));
+  localStorage.setItem('debt_hist_v2', JSON.stringify(history));
+}
+function fmt(n) { return '$' + Math.round(n).toLocaleString('zh-TW'); }
+function now() {
+  const d = new Date(), p = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}/${p(d.getMonth()+1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2600);
+}
+function switchTab(t) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + t).classList.add('active');
+  document.querySelectorAll('.nav button')[{overview:0,planner:1,history:2}[t]].classList.add('active');
+  if (t === 'history') renderHistory();
+  if (t === 'planner') calcPlan();
+}
+
+/* ── SUMMARY ── */
+function renderSummary() {
+  const total = debts.reduce((s,d) => s + Math.max(0,d.balance), 0);
+  const paid  = debts.reduce((s,d) => s + Math.max(0,d.original - d.balance), 0);
+  const cnt   = debts.filter(d => d.balance > 0).length;
+  document.getElementById('s-total').textContent = fmt(total);
+  document.getElementById('s-paid').textContent  = fmt(paid);
+  document.getElementById('s-count').textContent = cnt + ' 筆';
+}
+
+/* ── DEBT LIST ── */
+function renderDebts() {
+  const el = document.getElementById('debtList');
+  el.innerHTML = '';
+  const active = debts.filter(d => d.balance > 0).sort((a,b) => b.balance - a.balance);
+  if (!active.length) { el.innerHTML = '<div class="empty">🎉 所有債務都還清了！</div>'; return; }
+  active.forEach(debt => {
+    const pct   = debt.original > 0 ? Math.min(100,(debt.original-debt.balance)/debt.original*100) : 0;
+    const mInt  = (!debt.interestFree && debt.rate) ? Math.round(debt.balance*debt.rate/12) : 0;
+    const fillC = debt.interestFree ? 'grn' : (debt.rate > 0.15 ? 'red' : 'blu');
+    const tagC  = debt.interestFree ? 'grn' : (debt.rate > 0.15 ? 'red' : 'amb');
+    const tagT  = debt.interestFree ? '免息' : `${(debt.rate*100).toFixed(2)}%`;
+    const note  = debt.note ? `<span class="dnote">${debt.note}</span>` : '';
+    const meta  = debt.monthly > 0 ? `${debt.type} · 每月攤還 ${fmt(debt.monthly)}` : debt.type;
+    const iLine = mInt > 0 ? `<div class="drate">月利息約 ${fmt(mInt)}</div>` : '';
+
+    const card = document.createElement('div');
+    card.className = 'dcard';
+    card.id = 'card_' + debt.id;
+    card.innerHTML = `
+      <div class="dtop">
+        <div><div class="dname">${debt.name}${note}</div><div class="dmeta">${meta}</div></div>
+        <span class="tag ${tagC}">${tagT}</span>
+      </div>
+      <div class="damount">${fmt(debt.balance)}</div>
+      ${iLine}
+      <div class="pbar"><div class="pfill ${fillC}" style="width:${pct.toFixed(1)}%"></div></div>
+      <div class="pinfo"><span>已還 ${pct.toFixed(1)}%</span><span>原始 ${fmt(debt.original)}</span></div>
+      <div class="arow">
+        <input type="number" id="pay_${debt.id}" placeholder="輸入還款金額" min="1" />
+        <button class="btn pri" onclick="makePayment('${debt.id}')"><i class="ti ti-check"></i> 還款</button>
+        <button class="btn sec" onclick="toggleEdit('${debt.id}')"><i class="ti ti-edit"></i> 修改</button>
+      </div>
+      <div class="edit-section" id="edit_${debt.id}">
+        <div class="edit-hint">直接修改目前餘額或利率（不計入還款紀錄）</div>
+        <div class="edit-row">
+          <label>目前餘額</label>
+          <input type="number" id="ebal_${debt.id}" value="${debt.balance}" placeholder="餘額" />
+        </div>
+        <div class="edit-row">
+          <label>年利率 %</label>
+          <input type="number" id="erate_${debt.id}" value="${debt.interestFree ? 0 : +(debt.rate*100).toFixed(2)}" placeholder="0 = 免息" step="0.01" />
+        </div>
+        <div class="edit-row">
+          <label>每月攤還</label>
+          <input type="number" id="emonthly_${debt.id}" value="${debt.monthly}" placeholder="0" />
+        </div>
+        <div class="arow" style="margin-top:2px">
+          <button class="btn warn" onclick="saveEdit('${debt.id}')"><i class="ti ti-device-floppy"></i> 儲存修改</button>
+          <button class="btn sec" onclick="toggleEdit('${debt.id}')">取消</button>
+        </div>
+      </div>
+    `;
+    el.appendChild(card);
+  });
+}
+
+function toggleEdit(id) {
+  const el = document.getElementById('edit_' + id);
+  el.classList.toggle('open');
+}
+
+function saveEdit(id) {
+  const debt = debts.find(d => d.id === id);
+  if (!debt) return;
+  const newBal  = parseFloat(document.getElementById('ebal_' + id).value);
+  const newRate = parseFloat(document.getElementById('erate_' + id).value);
+  const newMon  = parseFloat(document.getElementById('emonthly_' + id).value) || 0;
+  if (isNaN(newBal) || newBal < 0) { toast('請輸入有效餘額'); return; }
+  if (isNaN(newRate) || newRate < 0) { toast('請輸入有效利率'); return; }
+  const oldBal = debt.balance;
+  debt.balance = newBal;
+  debt.rate = newRate / 100;
+  debt.interestFree = newRate === 0;
+  debt.monthly = newMon;
+  history.push({ type:'edit', name: debt.name, oldBal, newBal, date: now() });
+  save();
+  render();
+  toast(`✓ 已更新 ${debt.name} 餘額為 ${fmt(newBal)}`);
+}
+
+function makePayment(id) {
+  const input  = document.getElementById('pay_' + id);
+  const amount = parseFloat(input.value);
+  const debt   = debts.find(d => d.id === id);
+  if (!debt) return;
+  if (!amount || amount <= 0) { toast('請輸入有效還款金額'); return; }
+  if (amount > debt.balance)  { toast('還款金額不可超過欠款餘額'); return; }
+  debt.balance = Math.max(0, debt.balance - amount);
+  history.push({ type:'pay', name: debt.name, amount, date: now() });
+  save(); input.value = '';
+  render();
+  toast(`✓ 已記錄還款 ${fmt(amount)} 給 ${debt.name}`);
+}
+
+/* ── PLANNER ── */
+function calcPlan() {
+  const income = parseFloat(document.getElementById('income').value) || 0;
+  const living = parseFloat(document.getElementById('living').value) || 0;
+  const avail  = income - living;
+  const out    = document.getElementById('plan-output');
+  if (!income) { out.innerHTML = ''; return; }
+
+  // 固定最低還款（每月必繳）
+  const fixed = debts.filter(d => d.balance > 0 && d.monthly > 0)
+    .reduce((s,d) => s + d.monthly, 0);
+
+  const extra  = Math.max(0, avail - fixed);
+
+  // 先列出所有固定應繳項目
+  const fixedItems = debts.filter(d => d.balance > 0 && d.monthly > 0)
+    .sort((a,b) => b.rate - a.rate);
+
+  // 額外資金：先攻利率最高且無固定攤還的
+  const targets = debts.filter(d => d.balance > 0 && !d.interestFree)
+    .sort((a,b) => b.rate - a.rate);
+
+  let remaining = extra;
+  const extraPlan = [];
+  for (const d of targets) {
+    if (remaining <= 0) break;
+    const pay = Math.min(remaining, d.balance - d.monthly);
+    if (pay > 0) { extraPlan.push({ debt: d, pay }); remaining -= pay; }
+  }
+
+  const totalPay   = fixed + extra - remaining;
+  const totalInt   = debts.filter(d => d.balance > 0 && !d.interestFree)
+    .reduce((s,d) => s + Math.round(d.balance * d.rate / 12), 0);
+  const leftover   = avail - totalPay;
+  const shortfall  = avail < fixed;
+
+  let html = '';
+
+  // 警示或OK
+  if (avail <= 0) {
+    html += `<div class="alert-box warn"><i class="ti ti-alert-triangle"></i> 收入扣掉生活費後剩 ${fmt(avail)}，無法支付任何債務，建議重新評估生活費用。</div>`;
+  } else if (shortfall) {
+    html += `<div class="alert-box warn"><i class="ti ti-alert-triangle"></i> 可用金額 ${fmt(avail)} 不夠支付每月固定攤還 ${fmt(fixed)}，缺口 ${fmt(fixed - avail)}。</div>`;
+  } else {
+    html += `<div class="alert-box ok"><i class="ti ti-circle-check"></i> 可用金額 ${fmt(avail)}，固定應繳 ${fmt(fixed)}，還有 ${fmt(extra)} 可加碼還高利率債務。</div>`;
+  }
+
+  html += `<div class="plan-result">`;
+
+  if (fixedItems.length) {
+    html += `<div style="font-size:12px;font-weight:600;color:var(--tm);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">每月固定攤還</div>`;
+    fixedItems.forEach(d => {
+      const mInt = Math.round(d.balance * d.rate / 12);
+      const why  = d.interestFree ? '免息攤還' : `月息 ${fmt(mInt)}`;
+      html += `<div class="plan-item">
+        <div class="pi-left"><div class="pi-name">${d.name}</div><div class="pi-why">${why}</div></div>
+        <div class="pi-right"><div class="pi-amt">${fmt(d.monthly)}</div><div class="pi-tag">固定</div></div>
+      </div>`;
+    });
+  }
+
+  if (extraPlan.length && extra > 0) {
+    html += `<div style="font-size:12px;font-weight:600;color:var(--tm);margin:10px 0 6px;text-transform:uppercase;letter-spacing:.05em">建議額外加碼（利率高先還）</div>`;
+    extraPlan.forEach(({debt: d, pay}) => {
+      const why = `年利率 ${(d.rate*100).toFixed(2)}%，月息 ${fmt(Math.round(d.balance*d.rate/12))}`;
+      html += `<div class="plan-item">
+        <div class="pi-left"><div class="pi-name">${d.name}</div><div class="pi-why">${why}</div></div>
+        <div class="pi-right"><div class="pi-amt">${fmt(pay)}</div><div class="pi-tag">加碼</div></div>
+      </div>`;
+    });
+  }
+
+  html += `</div>`;
+
+  html += `<div class="plan-summary">
+    <div class="ps-item"><div class="ps-lb">本月建議總還款</div><div class="ps-vl red">${fmt(totalPay)}</div></div>
+    <div class="ps-item"><div class="ps-lb">本月剩餘存款</div><div class="ps-vl ${leftover >= 0 ? 'grn' : 'red'}">${fmt(leftover)}</div></div>
+    <div class="ps-item"><div class="ps-lb">本月總利息支出</div><div class="ps-vl red">${fmt(totalInt)}</div></div>
+    <div class="ps-item"><div class="ps-lb">可用金額</div><div class="ps-vl">${fmt(Math.max(0, avail))}</div></div>
+  </div>`;
+
+  out.innerHTML = html;
+}
+
+/* ── HISTORY ── */
+function renderHistory() {
+  const el = document.getElementById('historyList');
+  if (!history.length) { el.innerHTML = '<div class="empty">還沒有任何紀錄</div>'; return; }
+  el.innerHTML = history.slice().reverse().map(h => {
+    if (h.type === 'pay') return `
+      <div class="hitem">
+        <div><div class="hi-name">${h.name}</div><div class="hi-date">${h.date}</div></div>
+        <div class="hi-amt pay">－${fmt(h.amount)}</div>
+      </div>`;
+    if (h.type === 'edit') return `
+      <div class="hitem">
+        <div><div class="hi-name">${h.name} 餘額修改</div><div class="hi-date">${h.date}</div></div>
+        <div class="hi-amt edit">${fmt(h.oldBal)} → ${fmt(h.newBal)}</div>
+      </div>`;
+    return '';
+  }).join('');
+}
+
+function render() { renderSummary(); renderDebts(); }
+render();
+</script>
+</body>
+</html>
